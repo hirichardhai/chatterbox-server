@@ -38,8 +38,9 @@ describe('server', function() {
       uri: 'http://127.0.0.1:3003/classes/messages',
       json: {
         username: 'Jono',
-        text: 'Do my bidding!',
-        roomname: 'Lobby'}
+        message: 'Do my bidding!'
+      }
+        
     };
 
     request(requestParams, function(error, response, body) {
