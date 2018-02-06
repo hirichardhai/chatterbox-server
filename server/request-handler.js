@@ -19,6 +19,12 @@ var message = {
 
   ]
 }
+var defaultCorsHeaders = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST',
+  'access-control-allow-headers': 'content-type, accept, X-Parse-Application-Id, X-Parse-REST-API-Key',
+  'access-control-max-age': 10 // Seconds.
+};
 var requestHandler = function (request, response) {
   if (request.url !== "/classes/messages") {
     response.writeHead(404, 'BAD TEST');
@@ -39,8 +45,11 @@ var requestHandler = function (request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   var headers = defaultCorsHeaders;
+
   if (request.method === "OPTIONS") {
-    response.writeHead(200, defaultCorsHeadersß)
+    headers['Content-Type'] = 'application/json';
+    response.writeHead(200, headers)
+    response.end()
   }
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   if (request.url === "/classes/messages") {
@@ -49,7 +58,7 @@ var requestHandler = function (request, response) {
 
       headers['Content-Type'] = 'application/JSON';
       response.writeHead(statusCode, headers);
-
+      console.log(message)
       response.end(JSON.stringify(message));
     } else if (request.method === "POST") {
 

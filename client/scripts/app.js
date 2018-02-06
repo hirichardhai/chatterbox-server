@@ -3,7 +3,7 @@ var app = {
 
   //TODO: The current 'handleUsernameClick' function just toggles the class 'friend'
   //to all messages sent by the user
-  server: 'http://parse.CAMPUS.hackreactor.com/chatterbox/classes/messages',
+  server: 'http://127.0.0.1:3003/classes/messages',
   username: 'anonymous',
   roomname: 'lobby',
   lastMessageId: 0,
@@ -42,7 +42,8 @@ var app = {
     $.ajax({
       url: app.server,
       type: 'POST',
-      data: message,
+      data: JSON.stringify(message),
+      contentType: 'application/json',
       success: function (data) {
         // Clear messages input
         app.$message.val('');
@@ -56,18 +57,21 @@ var app = {
     });
   },
 
-  fetch: function(animate) {
+  fetch: function() {
     $.ajax({
       url: app.server,
       type: 'GET',
-      data: { order: '-createdAt' },
+      // data: { order: '-createdAt' },
       contentType: 'application/json',
       success: function(data) {
+
+        data = JSON.parse(data);
         // Don't bother if we have nothing to work with
         if (!data.results || !data.results.length) { return; }
 
         // Store messages for caching later
         app.messages = data.results;
+        console.log(app.messages)
 
         // Get the last message
         var mostRecentMessage = data.results[data.results.length - 1];
@@ -78,7 +82,7 @@ var app = {
           app.renderRoomList(data.results);
 
           // Update the UI with the fetched messages
-          app.renderMessages(data.results, animate);
+          app.renderMessages(data.results);
 
           // Store the ID of the most recent message
           app.lastMessageId = mostRecentMessage.objectId;
@@ -96,14 +100,13 @@ var app = {
 
   renderMessages: function(messages, animate) {
     // Clear existing messages`
-    app.clearMessages();
-    app.stopSpinner();
+    // app.clearMessages();
     if (Array.isArray(messages)) {
       // Add all fetched messages that are in our current room
       messages
         .filter(function(message) {
           return message.roomname === app.roomname ||
-                 app.roomname === 'lobby' && !message.roomname;
+                 app.roomname === 'lobby' 
         })
         .forEach(app.renderMessage);
     }
@@ -154,6 +157,8 @@ var app = {
     // Add in the message data using DOM methods to avoid XSS
     // Store the username in the element's data attribute
     var $username = $('<span class="username"/>');
+
+    console.log(message)
     $username.text(message.username + ': ').attr('data-roomname', message.roomname).attr('data-username', message.username).appendTo($chat);
 
     // Add the friend class
@@ -162,7 +167,7 @@ var app = {
     }
 
     var $message = $('<br><span/>');
-    $message.text(message.text).appendTo($chat);
+    $message.text(message.message).appendTo($chat);
 
     // Add the message to the UI
     app.$chats.append($chat);
@@ -214,7 +219,7 @@ var app = {
   handleSubmit: function(event) {
     var message = {
       username: app.username,
-      text: app.$message.val(),
+      message: app.$message.val(),
       roomname: app.roomname || 'lobby'
     };
 
@@ -225,8 +230,8 @@ var app = {
   },
 
   startSpinner: function() {
-    $('.spinner img').show();
-    $('form input[type=submit]').attr('disabled', 'true');
+    // $('.spinner img').show();
+    // $('form input[type=submit]').attr('disabled', 'true');
   },
 
   stopSpinner: function() {

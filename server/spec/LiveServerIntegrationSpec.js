@@ -75,5 +75,48 @@ describe('server', function() {
     });
   });
 
+  it('should not respond to GET requests for /classes/messages with a 404 status code', function(done) {
+    request('http://127.0.0.1:3003/classes/messages', function(error, response, body) {
+      expect(response.statusCode).to.not.equal(404);
+      done();
+    });
+  });
 
+  it('should not accept POST requests to /classes/messages/other', function(done) {
+    var requestParams = {method: 'POST',
+      uri: 'http://127.0.0.1:3003/classes/messages/other',
+      json: {
+        username: 'Jono',
+        message: 'Do my bidding!'
+      }
+        
+    };
+
+    request(requestParams, function(error, response, body) {
+      expect(response.statusCode).to.not.equal(201);
+      done();
+    });
+  });
+
+  it('should respond to GET requests for /classes/messages with a 200 status code', function(done) {
+    request('http://127.0.0.1:3003/classes/messages', function(error, response, body) {
+      expect(response.statusCode).to.equal(200);
+      done();
+    });
+  });
+
+    it('should not accept PUT requests', function(done) {
+    var requestParams = {method: 'PUT',
+      uri: 'http://127.0.0.1:3003/classes/messages/',
+      json: {
+        username: 'Jono',
+        message: 'Do my bidding!'
+      }
+    };
+
+    request(requestParams, function(error, response, body) {
+      expect(response.statusCode).to.equal(404);
+      done();
+    });
+  });
 });
