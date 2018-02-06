@@ -11,9 +11,19 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-var messages = {};
 
-var requestHandler = function(request, response) {
+const fs = require('fs');
+
+var message = {
+  results: [
+
+  ]
+}
+var requestHandler = function (request, response) {
+  if (request.url !== "/classes/messages") {
+    response.writeHead(404, 'BAD TEST');
+    response.end();
+  }
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -28,44 +38,42 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
+  var headers = defaultCorsHeaders;
+  if (request.method === "OPTIONS") {
+    response.writeHead(200, defaultCorsHeadersß)
+  }
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   if (request.url === "/classes/messages") {
-     if (request.method === "GET") {
-        var statusCode = 200;
-        var headers = defaultCorsHeaders;
-        headers['Content-Type'] = 'application/JSON';
-        response.writeHead(statusCode, headers);
-            var respBody = {
-              results: [
-                { hello: 'world', world: 'hello' }
-              ]
-            };
-            response.end(JSON.stringify(respBody));
-    } else if (request.method === "POST") {
-      var bodyData = '';
-      request.setEncoding('utf8');
-      request.on('data', (chunk) => { bodyData += chunk; } );
-      request.on('end', () => {
-        response.writeHead(201, 'Created')
-        const parsed = JSON.parse(JSON.stringify(bodyData));
-        response.end(parsed);
-      }).on('error', (e) => {
-        console.error(`Got error: ${e.message}`);
-      });
-      // response.write('hi');
-      // response.end(JSON);
-     
-     
+    if (request.method === "GET") {
+      var statusCode = 200;
 
+      headers['Content-Type'] = 'application/JSON';
+      response.writeHead(statusCode, headers);
+
+      response.end(JSON.stringify(message));
+    } else if (request.method === "POST") {
+
+      headers['Content-Type'] = 'application/JSON';
+      response.writeHead(201, headers)
+      request.setEncoding('utf8');
+
+      var promise1 = new Promise((resolve, reject) => {
+        var body = '';
+        request.on('data', (data) => {
+          body += data.toString()
+          resolve(body);
+        });
+      });
+      promise1.then((data) => message.results.push(JSON.parse(data)));
+      var messageResponse = {
+        objectId: '',
+        createdAt: Date.now()
+      };
       
-      // // response.write(responseBody);
-      // console.log(messages.message)
-      
-    } else {
-      response.writeHead(404, 'Bad request')
-      response.end();
+      response.end(JSON.stringify(messageResponse));
+
     }
-  } 
+  }
 
   // The outgoing status.
 
@@ -100,9 +108,9 @@ var requestHandler = function(request, response) {
 // client from this domain by setting up static file serving.
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
+  'access-control-allow-methods': 'GET, POST',
+  'access-control-allow-headers': 'content-type, accept, X-Parse-Application-Id, X-Parse-REST-API-Key',
   'access-control-max-age': 10 // Seconds.
 };
 
-module.exports = requestHandler
+exports.requestHandler = requestHandler;
