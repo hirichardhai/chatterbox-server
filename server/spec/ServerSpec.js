@@ -84,7 +84,7 @@ describe('Node Server Request Listener Function', function() {
     var res = new stubs.response();
 
     handler.requestHandler(req, res);
-
+    
     expect(res._responseCode).to.equal(201);
 
       // Now if we request the log for that room the message we posted should be there:
@@ -92,9 +92,10 @@ describe('Node Server Request Listener Function', function() {
     res = new stubs.response();
 
     handler.requestHandler(req, res);
-
+   console.log(`testdata: ${res._data}`)
     expect(res._responseCode).to.equal(200);
     var messages = JSON.parse(res._data).results;
+
     expect(messages.length).to.be.above(0);
     expect(messages[0].username).to.equal('Jono');
     expect(messages[0].message).to.equal('Do my bidding!');
