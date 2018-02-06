@@ -3,7 +3,7 @@ module.exports = {
 
   response: function() {
     this._ended = false;
-    this._responseCode = null;
+    this._responseCode = 200;
     this._headers = null;
     this._data = null;
 
