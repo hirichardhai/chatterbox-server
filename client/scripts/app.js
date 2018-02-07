@@ -3,10 +3,11 @@ var app = {
 
   //TODO: The current 'handleUsernameClick' function just toggles the class 'friend'
   //to all messages sent by the user
-  server: 'http://127.0.0.1:3003/classes/messages',
+  server: 'http://127.0.0.1:3000/classes/messages',
   username: 'anonymous',
   roomname: 'lobby',
-  lastMessageId: 0,
+  lastMessageId: '',
+  latestMessageId: '',
   friends: {},
   messages: [],
 
@@ -27,11 +28,11 @@ var app = {
 
     // Fetch previous messages
     app.startSpinner();
-    app.fetch(false);
+    app.fetch();
 
     // Poll for new messages
     setInterval(function() {
-      app.fetch(true);
+      app.fetch();
     }, 3000);
   },
 
@@ -46,10 +47,19 @@ var app = {
       contentType: 'application/json',
       success: function (data) {
         // Clear messages input
+        data = JSON.parse(data);
         app.$message.val('');
+
+        app.lastMessageId = data.objectId
+
 
         // Trigger a fetch to update the messages, pass true to animate
         app.fetch();
+        console.log(`app.messages here ${app.messages[app.messages.length - 1]}`)
+        //  app.messages[app.messages.length - 1].objectId = app.lastMessageId
+
+                // data.results[data.results.length - 1];
+
       },
       error: function (error) {
         console.error('chatterbox: Failed to send message', error);
@@ -68,17 +78,20 @@ var app = {
         data = JSON.parse(data);
         // Don't bother if we have nothing to work with
         if (!data.results || !data.results.length) { return; }
-
+        // data.results[data.results.length - 1].objectId = app.lastMessageId;
         // Store messages for caching later
         app.messages = data.results;
-        console.log(app.messages)
-
+      
         // Get the last message
-        var mostRecentMessage = data.results[data.results.length - 1];
+        var mostRecentMessage = app.latestMessageId
+        // data.results[data.results.length - 1];
 
         // Only bother updating the DOM if we have a new message
-        if (mostRecentMessage.objectId !== app.lastMessageId) {
+        console.log(`mostrecentMessage ${app.messages}`)
+        console.log('applastMessageid ', app.lastMessageId);
+        if (mostRecentMessage !== app.lastMessageId) {
           // Update the UI with the fetched rooms
+
           app.renderRoomList(data.results);
 
           // Update the UI with the fetched messages
@@ -98,9 +111,9 @@ var app = {
     app.$chats.html('');
   },
 
-  renderMessages: function(messages, animate) {
+  renderMessages: function(messages) {
     // Clear existing messages`
-    // app.clearMessages();
+    app.clearMessages();
     if (Array.isArray(messages)) {
       // Add all fetched messages that are in our current room
       messages
@@ -112,9 +125,9 @@ var app = {
     }
 
     // Make it scroll to the top
-    if (animate) {
-      $('body').animate({scrollTop: '0px'}, 'fast');
-    }
+    // if (animate) {
+    //   $('body').animate({scrollTop: '0px'}, 'fast');
+    // }
   },
 
   renderRoomList: function(messages) {
@@ -150,7 +163,6 @@ var app = {
     if (!message.roomname) {
       message.roomname = 'lobby';
     }
-
     // Create a div to hold the chats
     var $chat = $('<div class="chat"/>');
 
@@ -158,7 +170,6 @@ var app = {
     // Store the username in the element's data attribute
     var $username = $('<span class="username"/>');
 
-    console.log(message)
     $username.text(message.username + ': ').attr('data-roomname', message.roomname).attr('data-username', message.username).appendTo($chat);
 
     // Add the friend class
@@ -222,7 +233,7 @@ var app = {
       message: app.$message.val(),
       roomname: app.roomname || 'lobby'
     };
-
+    app.fetch();
     app.send(message);
 
     // Stop the form from submitting
